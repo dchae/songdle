@@ -4,6 +4,7 @@ require 'tilt/erubis'
 require 'httparty'
 require 'pkce_challenge'
 require 'json'
+require 'yaml'
 
 configure do
   enable :sessions
@@ -13,8 +14,54 @@ end
 
 before do
   session[:messages] ||= []
-  p session[:challenge] ||= PkceChallenge.challenge(char_length: 64)
-  #
+  @challenge = load_challenge
+end
+
+def add_message(msg)
+  session[:messages] << msg
+end
+
+def file_path(filename = nil, subfolder = 'temp')
+  if ENV['RACK_ENV'] == 'test'
+    subfolder = 'test/' + subfolder
+  else
+    subfolder = '/' + subfolder
+  end
+  filename = File.basename(filename) if filename
+  File.join(*[File.expand_path('..', __FILE__), subfolder, filename].compact)
+end
+
+def session_file_path(filename = nil)
+  path = file_path(nil, 'temp/' + session[:session_id])
+  FileUtils.mkdir_p(path) unless File.directory?(path)
+  File.join([path, filename].compact)
+end
+
+def load_yaml(filepath)
+  YAML.load_file(filepath) if File.file?(filepath)
+  # File.open(filepath, "r") { |f| YAML.load(f)}
+end
+
+def write_yaml(filepath, obj)
+  File.open(filepath, 'w') { |f| YAML.dump(obj, f) }
+end
+
+def load_challenge
+  path = session_file_path('challenge.yaml')
+  loaded_challenge_hash = load_yaml(path)
+  return loaded_challenge_hash if loaded_challenge_hash
+
+  challenge = PkceChallenge.challenge(char_length: 64)
+  challenge_hash = {
+    code_challenge: challenge.code_challenge,
+    code_verifier: challenge.code_verifier,
+  }
+  write_yaml(path, challenge_hash)
+  challenge_hash
+end
+
+def load_user_data(response)
+  load_yaml(session_file_path('user_data.yml'))
 end
 
 get '/' do
@@ -31,7 +78,6 @@ get '/play' do
     redirectUri = 'http://localhost:4567/callback'
     scope = 'user-read-private user-read-email'
     auth_url = 'https://accounts.spotify.com/authorize'
-    challenge = session[:challenge]
     newuri =
       URI::HTTP.build(
         host: 'accounts.spotify.com',
@@ -43,20 +89,22 @@ get '/play' do
               client_id: clientId,
               scope: scope,
               code_challenge_method: 'S256',
-              code_challenge: challenge.code_challenge,
+              code_challenge: @challenge[:code_challenge],
               redirect_uri: redirectUri,
             },
           ),
       )
     redirect newuri
   end
-  response =
+  @response =
     HTTParty.get(
       'https://api.spotify.com/v1/me',
       { headers: { Authorization: 'Bearer ' + session[:access_token] } },
     )
-  response.to_s
-  # erb :spotify_profile_data
+  p @response
+  @display_name = @response['display_name']
+  @profile_url = @response['external_urls']['spotify']
+  erb :spotify_profile_data
 end
 
 get '/callback' do
@@ -68,7 +116,6 @@ get '/callback' do
 
   clientId = 'a6c331f9a46f4198904b69b4dea82f74' # My Spotify Dev App Client ID
   redirectUri = 'http://localhost:4567/callback'
-  challenge = session[:challenge]
   code = params['code']
   encoded_body =
     URI.encode_www_form(
@@ -77,7 +124,7 @@ get '/callback' do
         grant_type: 'authorization_code',
         code: code,
         redirect_uri: redirectUri,
-        code_verifier: challenge.code_verifier,
+        code_verifier: @challenge[:code_verifier],
       },
     )
 
