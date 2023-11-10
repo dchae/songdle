@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+  <head>
+    <title>
+      <%= @page_title %>
+    </title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/stylesheets/cms.css" type="text/css">
+  </head>
+  <body>
+    <header>
+      <a href="/">Home</a>
+    </header>
+    <% session[:messages].each do |message| %>
+      <p class="flash"><%= message %></p>
+    <% end %>
+    <% session[:messages].clear %>
+    <main>
+      <%== yield %>
+    </main>
+
+  </body>
+</html>

@@ -1,0 +1,18 @@
+body {
+  padding: 1em;
+  font-family: sans-serif;
+}
+
+.flash {
+  padding: 10px;
+  background: #ffff99;
+}
+
+form.inline {
+  display: inline;
+}
+
+p.user-status {
+  font-style: italic;
+  font-size: 0.9em;
+}
