@@ -96,14 +96,18 @@ get '/play' do
       )
     redirect newuri
   end
-  @response =
+  response =
     HTTParty.get(
       'https://api.spotify.com/v1/me',
       { headers: { Authorization: 'Bearer ' + session[:access_token] } },
     )
-  p @response
-  @display_name = @response['display_name']
-  @profile_url = @response['external_urls']['spotify']
+  @display_name = response['display_name']
+  @profile_url = response['external_urls']['spotify']
+  @id = response["id"]
+  @profile_image = response["images"][1]["url"]
+  @follower_count = response["followers"]["total"]
+  @country = response["country"]
+  @email = response["email"]
   erb :spotify_profile_data
 end
 
