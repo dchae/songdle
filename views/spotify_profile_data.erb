@@ -1,9 +1,37 @@
 <div>
-  <p><a href="<%= @profile_url %>"><%= @display_name %></a></p>
-  <img src="<%= @profile_image %>">
-  <p>ID: <%= @id %></p>
-  <p>Follower Count: <%= @follower_count %></p>
-  <p>Country: <%= @country %></p>
-  <p>Email: <%= @email%></p>
-
+  <p><a href="<%= @user_data['external_urls']['spotify'] %>">
+      <%= @user_data['display_name'] %>
+    </a></p>
+  <img src="<%= @user_data['images'][1]['url'] %>">
+  <p>ID: <%= @user_data['id'] %></p>
+  <p>Followers: <%= @user_data['followers']['total'] %></p>
+  <p>Country: <%= @user_data['country'] %></p>
+  <p>Email: <%= @user_data['email']%></p>
+</div>
+<div>
+  <h3>Top Tracks</h3>
+  <ul>
+    <% @top_tracks.each do |track| %>
+      <li>
+        <a href="<%= track["album"]["external_urls"]["spotify"] %>">
+          <img src="<%= track["album"]["images"].first["url"]%>" width="50" height="50">
+        </a>
+        <a href="<%= track["external_urls"]["spotify"] %>"><%= track["name"] %></a> by
+        <% track["artists"].each do |artist| %>
+          <a href="<%= artist["external_urls"]["spotify"] %>"><%= artist["name"] %></a>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+</div>
+<div>
+  <h3>Playlists</h3>
+  <ul>
+    <% @playlists.each do |playlist| %>
+      <li>
+        <img src="<%= playlist['images'].first['url'] %>" width="50" height="50">
+        <a href="<%= playlist["external_urls"]["spotify"] %>"><%= playlist["name"] %></a>
+      </li>
+    <% end %>
+  </ul>
 </div>

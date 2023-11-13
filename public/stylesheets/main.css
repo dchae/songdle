@@ -1,6 +1,7 @@
 body {
-  padding: 1em;
-  font-family: sans-serif;
+  font: normal 20px "PT Sans", Helvetica, Arial, sans-serif;
+  color: #3f3f3f;
+  background: #ffffff; 
 }
 
 .flash {
@@ -15,4 +16,9 @@ form.inline {
 p.user-status {
   font-style: italic;
   font-size: 0.9em;
+}
+
+.playlist-item {
+  width: 30px;
+  height: 30px;
 }
